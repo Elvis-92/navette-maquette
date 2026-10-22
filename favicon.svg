@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Navette">
+  <title>Navette</title>
+  <!-- Two warps, not three, and one weft. At 16px the third warp and the
+       second weft close up into noise; the shuttle is what has to survive. -->
+  <rect width="32" height="32" rx="7" fill="#14181B"/>
+  <g stroke="#FBFAF7" stroke-width="3" stroke-linecap="round" fill="none">
+    <path d="M11 7 V25"/>
+    <path d="M21 7 V25"/>
+  </g>
+  <g stroke="#E0AC5A" stroke-width="3" stroke-linecap="round" fill="none">
+    <path d="M6.5 20 H15.5"/>
+  </g>
+  <path d="M14 12 Q21 8.4 28 12 Q21 15.6 14 12 Z" fill="#E0AC5A"/>
+</svg>

@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<title>Navette — parcours minimal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --encre: #14181B; --papier: #FBFAF7; --carte: #FFFFFF;
+  --ocre: #8F6212; --ocre-profond: #6E4B0D; --ocre-fond: #F6EBD6;
+  --n-50: #F5F3EF; --n-100: #EAE7E1; --n-200: #D9D5CD; --n-400: #9C968B; --n-600: #625D54; --n-700: #4A463F;
+  --succes: #2F6B4F; --succes-fond: #E3F0E8; --attente: #8A6516; --attente-fond: #F7EDD8;
+  --danger: #A33124; --danger-fond: #F7E1DE; --info: #35499B; --info-fond: #E4E8F6;
+  --fond-page: #EAE7E1;
+  --display: 'Archivo', system-ui, sans-serif; --texte: 'Hanken Grotesk', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --r: 10px; --r-lg: 14px; --cible: 48px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --encre: #F3F1EC; --papier: #0E1216; --carte: #161B20; --ocre: #E0AC5A; --ocre-profond: #F0C285; --ocre-fond: #2A2214;
+    --n-50: #1B2026; --n-100: #232930; --n-200: #333A42; --n-400: #7C766B; --n-600: #B5AFA4; --n-700: #D2CCC1;
+    --succes: #7CC4A0; --succes-fond: #15291F; --attente: #E0AC5A; --attente-fond: #2A2214;
+    --danger: #F08A7C; --danger-fond: #2E1714; --info: #9DAEF0; --info-fond: #1A2140; --fond-page: #07090B;
+  }
+}
+:root[data-theme="dark"] {
+  --encre: #F3F1EC; --papier: #0E1216; --carte: #161B20; --ocre: #E0AC5A; --ocre-profond: #F0C285; --ocre-fond: #2A2214;
+  --n-50: #1B2026; --n-100: #232930; --n-200: #333A42; --n-400: #7C766B; --n-600: #B5AFA4; --n-700: #D2CCC1;
+  --succes: #7CC4A0; --succes-fond: #15291F; --attente: #E0AC5A; --attente-fond: #2A2214;
+  --danger: #F08A7C; --danger-fond: #2E1714; --info: #9DAEF0; --info-fond: #1A2140; --fond-page: #07090B;
+}
+* { box-sizing: border-box; }
+html { font-size: 17px; }
+body { margin: 0; background: var(--fond-page); color: var(--encre); font-family: var(--texte); line-height: 1.5; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* Bandeau de maquette */
+.bandeau { max-width: 860px; margin: 0 auto; padding: 20px 16px 8px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.bandeau h1 { font-family: var(--display); font-size: 1.25rem; letter-spacing: -0.02em; margin: 0; flex: 1; min-width: 220px; }
+.bandeau p { margin: 0; font-size: 0.8125rem; color: var(--n-600); width: 100%; }
+.lien { background: none; border: 0; color: var(--ocre); font-weight: 600; cursor: pointer; padding: 8px 4px; text-decoration: underline; text-underline-offset: 3px; }
+
+.onglets { display: none; max-width: 420px; margin: 8px auto 0; padding: 0 16px; gap: 8px; }
+.onglets button { flex: 1; min-height: var(--cible); border: 1px solid var(--n-200); background: var(--carte); border-radius: var(--r); font-weight: 600; cursor: pointer; position: relative; }
+.onglets button[aria-pressed="true"] { background: var(--encre); color: var(--papier); border-color: var(--encre); }
+.pastille { position: absolute; top: 8px; right: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--danger); }
+
+.scene { display: grid; grid-template-columns: repeat(2, minmax(0, 390px)); gap: 32px; justify-content: center; padding: 12px 16px 48px; }
+.colonne > .etiquette { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--n-600); margin: 0 0 8px 4px; font-weight: 600; }
+.tel { background: var(--papier); border-radius: 28px; border: 1px solid var(--n-200); height: 760px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 12px 40px rgb(0 0 0 / 0.12); }
+@media (max-width: 860px) {
+  .onglets { display: flex; }
+  .scene { grid-template-columns: minmax(0, 420px); padding-top: 12px; }
+  .colonne[hidden-mobile] { display: none; }
+  .colonne > .etiquette { display: none; }
+  .tel { height: calc(100dvh - 150px); min-height: 560px; border-radius: 20px; }
+}
+
+/* Contenu des écrans */
+.entete { padding: 14px 16px 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--n-100); }
+.entete h2 { font-family: var(--display); font-size: 1.125rem; letter-spacing: -0.02em; margin: 0; flex: 1; }
+.retour { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--n-50); cursor: pointer; font-size: 1.1rem; }
+.etape { font-size: 0.8125rem; color: var(--n-600); }
+.corps { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.pied { padding: 12px 16px 16px; border-top: 1px solid var(--n-100); display: flex; flex-direction: column; gap: 8px; }
+.nav { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--n-100); }
+.nav button { background: none; border: 0; min-height: 56px; font-size: 0.8125rem; font-weight: 600; color: var(--n-600); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; }
+.nav button[aria-current="true"] { color: var(--ocre); }
+.nav .ico { font-size: 1.15rem; line-height: 1; }
+.nav .pastille { top: 8px; right: calc(50% - 18px); }
+
+.btn { min-height: var(--cible); border-radius: var(--r); border: 1px solid var(--n-200); background: var(--carte); font-weight: 600; cursor: pointer; padding: 10px 16px; }
+.btn.prim { background: var(--ocre); border-color: var(--ocre); color: #fff; }
+:root[data-theme="dark"] .btn.prim { color: #14181B; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.prim { color: #14181B; } }
+.btn.prim:active { background: var(--ocre-profond); }
+.btn.grand { min-height: 56px; font-size: 1.0625rem; }
+.btn.danger { color: var(--danger); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.rangee { display: flex; gap: 8px; }
+.rangee > * { flex: 1; }
+
+.carte { background: var(--carte); border: 1px solid var(--n-100); border-radius: var(--r-lg); padding: 14px; }
+.carte h3 { margin: 0 0 6px; font-size: 1rem; }
+.sous { font-size: 0.875rem; color: var(--n-600); }
+.titre-section { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--n-600); font-weight: 600; margin: 4px 0 -4px; }
+
+.tuile { display: flex; gap: 14px; align-items: center; text-align: left; width: 100%; background: var(--carte); border: 1px solid var(--n-200); border-radius: var(--r-lg); padding: 16px; cursor: pointer; min-height: 88px; }
+.tuile .ico { width: 48px; height: 48px; border-radius: 12px; background: var(--ocre-fond); display: grid; place-items: center; font-size: 1.4rem; flex: none; }
+.tuile b { display: block; font-size: 1.0625rem; }
+
+label.champ { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; font-weight: 600; }
+input[type=text], input[type=tel], input[type=number], select, textarea { min-height: var(--cible); border: 1px solid var(--n-200); border-radius: var(--r); background: var(--carte); padding: 10px 12px; font-weight: 400; width: 100%; }
+textarea { min-height: 72px; resize: vertical; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--ocre); outline-offset: 2px; }
+
+.lieu { border-left: 3px solid var(--ocre); padding-left: 12px; display: flex; flex-direction: column; gap: 10px; }
+.lieu.arrivee { border-left-color: var(--encre); }
+.lieu-titre { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.outils { display: flex; gap: 8px; }
+.outils .btn { flex: 1; font-size: 0.9375rem; padding: 8px; }
+.outils .btn.fait { background: var(--succes-fond); border-color: var(--succes); color: var(--succes); }
+.carte-plan { height: 96px; border-radius: var(--r); border: 1px solid var(--n-200); position: relative; overflow: hidden;
+  background: linear-gradient(90deg, transparent 47%, var(--n-200) 47% 53%, transparent 53%), linear-gradient(0deg, transparent 40%, var(--n-200) 40% 46%, transparent 46%), linear-gradient(20deg, transparent 70%, var(--n-100) 70% 74%, transparent 74%), var(--n-50); }
+.carte-plan::after { content: "📍"; position: absolute; left: 56%; top: 18%; font-size: 1.6rem; }
+.carte-plan span { position: absolute; bottom: 6px; left: 8px; font-size: 0.75rem; background: var(--carte); padding: 2px 6px; border-radius: 6px; }
+.vocal { display: flex; align-items: center; gap: 10px; background: var(--n-50); border-radius: 999px; padding: 6px 12px 6px 6px; font-size: 0.875rem; }
+.vocal b { width: 32px; height: 32px; border-radius: 50%; background: var(--ocre); color: #fff; display: grid; place-items: center; font-size: 0.8rem; }
+.vocal i { flex: 1; height: 4px; border-radius: 2px; background: repeating-linear-gradient(90deg, var(--n-400) 0 3px, transparent 3px 6px); }
+
+.choix { display: flex; gap: 8px; }
+.choix button { flex: 1; min-height: var(--cible); border: 1px solid var(--n-200); background: var(--carte); border-radius: var(--r); cursor: pointer; font-weight: 600; }
+.choix button[aria-pressed="true"] { border: 2px solid var(--ocre); background: var(--ocre-fond); color: var(--ocre-profond); }
+:root[data-theme="dark"] .choix button[aria-pressed="true"] { color: var(--ocre); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .choix button[aria-pressed="true"] { color: var(--ocre); } }
+.puces { display: flex; gap: 8px; flex-wrap: wrap; }
+.puces button { min-height: 40px; border-radius: 999px; border: 1px solid var(--n-200); background: var(--carte); padding: 0 14px; cursor: pointer; font-weight: 600; font-size: 0.875rem; }
+.puces button[aria-pressed="true"] { background: var(--encre); color: var(--papier); border-color: var(--encre); }
+
+.livreur { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; width: 100%; text-align: left; background: var(--carte); border: 1px solid var(--n-200); border-radius: var(--r-lg); padding: 12px; cursor: pointer; }
+.livreur[aria-pressed="true"] { border: 2px solid var(--ocre); }
+.livreur[disabled] { opacity: 0.5; cursor: not-allowed; }
+.avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--n-100); display: grid; place-items: center; font-weight: 700; font-family: var(--display); }
+.livreur .nom { font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.livreur .prix { font-family: var(--mono); font-weight: 500; text-align: right; }
+.livreur .prix small { display: block; font-family: var(--texte); font-size: 0.75rem; color: var(--n-600); }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.badge.ok { background: var(--succes-fond); color: var(--succes); }
+.badge.att { background: var(--attente-fond); color: var(--attente); }
+.badge.ko { background: var(--danger-fond); color: var(--danger); }
+.badge.fav { background: var(--ocre-fond); color: var(--ocre); }
+.badge.info { background: var(--info-fond); color: var(--info); }
+.badge.neutre { background: var(--n-100); color: var(--n-700); }
+
+.ligne { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--n-100); font-size: 0.9375rem; }
+.ligne:last-child { border-bottom: 0; }
+.ligne span:first-child { color: var(--n-600); }
+
+.frise { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.frise li { display: grid; grid-template-columns: 24px 1fr; gap: 12px; padding-bottom: 16px; position: relative; }
+.frise li::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--n-200); background: var(--papier); margin: 4px 0 0 4px; z-index: 1; }
+.frise li::after { content: ""; position: absolute; left: 11px; top: 20px; bottom: 0; width: 2px; background: var(--n-100); }
+.frise li:last-child::after { display: none; }
+.frise li.fait::before { background: var(--succes); border-color: var(--succes); }
+.frise li.encours::before { background: var(--ocre); border-color: var(--ocre); box-shadow: 0 0 0 4px var(--ocre-fond); }
+.frise li.avenir { color: var(--n-400); }
+.frise b { display: block; }
+.frise small { color: var(--n-600); }
+
+.code { font-family: var(--mono); font-size: 2.25rem; letter-spacing: 0.3em; text-align: center; padding: 8px 0; }
+.alerte { border-radius: var(--r); padding: 12px; font-size: 0.9375rem; }
+.alerte.info { background: var(--info-fond); color: var(--info); }
+.alerte.att { background: var(--attente-fond); color: var(--attente); }
+.alerte.ok { background: var(--succes-fond); color: var(--succes); }
+.alerte.ko { background: var(--danger-fond); color: var(--danger); }
+.vide { text-align: center; color: var(--n-600); padding: 32px 16px; }
+.vide .ico { font-size: 2rem; display: block; margin-bottom: 8px; }
+.etoiles { display: flex; gap: 4px; justify-content: center; }
+.etoiles button { background: none; border: 0; font-size: 2rem; cursor: pointer; color: var(--n-200); min-width: var(--cible); min-height: var(--cible); }
+.etoiles button.on { color: var(--ocre); }
+
+.dispo { display: flex; align-items: center; gap: 10px; }
+.interrupteur { width: 52px; height: 32px; border-radius: 999px; border: 0; background: var(--n-200); position: relative; cursor: pointer; flex: none; }
+.interrupteur::after { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform 160ms ease-out; }
+.interrupteur[aria-checked="true"] { background: var(--succes); }
+.interrupteur[aria-checked="true"]::after { transform: translateX(20px); }
+.grille-zone { display: grid; grid-template-columns: 1fr 112px; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--n-100); }
+.grille-zone input { text-align: right; font-family: var(--mono); }
+.contact { display: flex; gap: 8px; align-items: center; }
+.contact .btn { min-width: var(--cible); padding: 8px 12px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="bandeau">
+  <h1>Navette · parcours minimal</h1>
+  <button class="lien" data-act="reset">Recommencer</button>
+  <p>Maquette cliquable, données fictives. Deux téléphones, celui du client et celui du livreur : ce que l'un envoie arrive chez l'autre.</p>
+</header>
+
+<div class="onglets" role="group" aria-label="Côté">
+  <button data-act="vue" data-v="client" aria-pressed="true">Côté client</button>
+  <button data-act="vue" data-v="livreur" aria-pressed="false">Côté livreur<span class="pastille" id="pastille-l" hidden></span></button>
+</div>
+
+<main class="scene">
+  <section class="colonne" id="col-client"><p class="etiquette">Client · Awa, boutique à Gbégamey</p><div class="tel" id="client"></div></section>
+  <section class="colonne" id="col-livreur" hidden-mobile><p class="etiquette" id="etiq-livreur">Livreur</p><div class="tel" id="livreur"></div></section>
+</main>
+
+<script>
+const QUARTIERS = { 'Gbégamey': 'cotonou', 'Akpakpa': 'cotonou', 'Cadjehoun': 'cotonou', 'Fidjrossè': 'cotonou', 'Ganhi': 'cotonou', 'Dantokpa': 'cotonou', 'Agla': 'cotonou', 'Zogbo': 'cotonou', 'Calavi': 'calavi', 'Godomey': 'calavi', 'Porto-Novo': 'porto' };
+const ZONES = [
+  { cle: 'meme', nom: 'Même quartier' },
+  { cle: 'cotonou', nom: 'Cotonou ↔ Cotonou' },
+  { cle: 'calavi', nom: 'Cotonou ↔ Calavi / Godomey' },
+  { cle: 'porto', nom: 'Cotonou ↔ Porto-Novo' },
+];
+const LIVREURS = [
+  { id: 'kossi', nom: 'Kossi', init: 'K', note: 4.8, courses: 312, km: 1.2, equipe: ['Moi', 'Sèna', 'Rachidi'], grille: { meme: 500, cotonou: 1000, calavi: 1500, porto: 3000 }, negocie: true, momo: '97 12 34 56', operateur: 'MTN' },
+  { id: 'afi', nom: 'Afi', init: 'A', note: 4.9, courses: 128, km: 0.6, equipe: null, grille: { meme: 500, cotonou: 1200, calavi: 1500, porto: 3500 }, negocie: false, momo: '95 44 21 08', operateur: 'Moov' },
+  { id: 'ismael', nom: 'Ismaël', init: 'I', note: 4.5, courses: 54, km: 2.8, equipe: null, grille: { meme: 300, cotonou: 800, calavi: 1300, porto: 2500 }, negocie: true, momo: '96 30 77 15', operateur: 'MTN' },
+  { id: 'mathieu', nom: 'Mathieu', init: 'M', note: 4.6, courses: 201, km: 3.4, equipe: ['Moi', 'Chabi'], grille: { meme: 500, cotonou: 1000, calavi: 2000, porto: 3000 }, negocie: true, momo: '94 18 62 40', operateur: 'Moov' },
+];
+const MAISON = { quartier: 'Gbégamey', repere: 'En face de la pharmacie Gbégamey, portail bleu, boutique « Awa Couture »', tel: '97 00 00 00', pin: true, vocal: false };
+const HISTORIQUE = [
+  { h: '08:40', trajet: 'Dantokpa → Fidjrossè', prix: 1000, mode: 'Espèces', qui: 'Kossi' },
+  { h: '09:55', trajet: 'Gbégamey → Calavi', prix: 1500, mode: 'MoMo', qui: 'Sèna' },
+  { h: '11:10', trajet: 'Akpakpa → Akpakpa', prix: 500, mode: 'Espèces', qui: 'Rachidi' },
+  { h: '12:30', trajet: 'Ganhi → Agla', prix: 1000, mode: 'À régler', qui: 'Sèna' },
+];
+const MODE = { especes: 'Espèces', momo: 'Mobile Money', plus_tard: 'pas encore payé' };
+
+const vierge = () => ({ quartier: '', repere: '', tel: '', pin: false, vocal: false });
+let S;
+function reset() {
+  S = {
+    vue: 'client', c: 'accueil', l: 'demandes',
+    type: null, depart: vierge(), arrivee: vierge(), colis: '', cod: false, codMontant: '',
+    filtre: 'proche', livreurId: null, propose: '', paiement: 'especes',
+    mission: null, indispo: [], favori: 'kossi', dispo: true, note: 0, lPaie: null, cPaie: null, refSms: '',
+    contreSaisie: '', codeSaisi: '', encaisseMode: null, equipier: 'Moi', photoColis: false,
+  };
+  render();
+}
+
+const fmt = n => Number(n).toLocaleString('fr-FR').replace(/\s/g, ' ') + ' F';
+const L = id => LIVREURS.find(l => l.id === id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function zone(a, b) {
+  if (!a || !b) return null;
+  if (a === b) return 'meme';
+  const za = QUARTIERS[a], zb = QUARTIERS[b];
+  if (za === 'porto' || zb === 'porto') return 'porto';
+  if (za === 'calavi' || zb === 'calavi') return 'calavi';
+  return 'cotonou';
+}
+const prixGrille = l => l.grille[zone(S.depart.quartier, S.arrivee.quartier)];
+const typeLabel = () => S.type === 'recuperer' ? 'Récupérer un colis pour moi' : 'Envoyer un colis';
+
+/* ---------- Client ---------- */
+function entete(titre, retour, etape) {
+  return `<div class="entete">${retour ? `<button class="retour" data-act="c" data-v="${retour}" aria-label="Retour">←</button>` : ''}<h2>${titre}</h2>${etape ? `<span class="etape">${etape}</span>` : ''}</div>`;
+}
+function blocLieu(cle, titre, aide) {
+  const p = S[cle];
+  return `<div class="lieu ${cle}">
+    <div class="lieu-titre">${cle === 'depart' ? '●' : '■'} ${titre}</div>
+    <label class="champ">Quartier
+      <select data-bind="${cle}.quartier"><option value="">Choisir…</option>${Object.keys(QUARTIERS).map(q => `<option ${p.quartier === q ? 'selected' : ''}>${q}</option>`).join('')}</select></label>
+    <label class="champ">Repère <textarea data-bind="${cle}.repere" placeholder="${aide}">${esc(p.repere)}</textarea></label>
+    <div class="outils">
+      <button class="btn ${p.pin ? 'fait' : ''}" data-act="pin" data-v="${cle}">📍 ${p.pin ? 'Épingle placée' : 'Placer l’épingle'}</button>
+      <button class="btn ${p.vocal ? 'fait' : ''}" data-act="vocal" data-v="${cle}">🎤 ${p.vocal ? 'Note 0:08' : 'Note vocale'}</button>
+    </div>
+    ${p.pin ? `<div class="carte-plan"><span>${esc(p.quartier || 'Position')} · position partagée</span></div>` : ''}
+    ${p.vocal ? `<div class="vocal"><b>▶</b><i></i><span class="num">0:08</span></div>` : ''}
+    <label class="champ">Téléphone de la personne sur place <input type="tel" inputmode="tel" data-bind="${cle}.tel" value="${esc(p.tel)}" placeholder="97 12 34 56"></label>
+  </div>`;
+}
+const lieuOk = p => p.quartier && (p.repere.trim() || p.pin || p.vocal) && p.tel.trim();
+
+function cAccueil() {
+  const fav = L(S.favori);
+  const m = S.mission;
+  return `${entete('Bonjour Awa')}
+  <div class="corps">
+    ${m && m.statut !== 'livree' ? `<button class="tuile" data-act="c" data-v="suivi"><span class="ico">🛵</span><span><b>Mission en cours</b><span class="sous">${statutTexte(m)}</span></span></button>` : ''}
+    <p class="titre-section">Nouvelle mission</p>
+    <button class="tuile" data-act="type" data-v="recuperer"><span class="ico">📥</span><span><b>Récupérer un colis pour moi</b><span class="sous">Le livreur va le chercher et me l’apporte</span></span></button>
+    <button class="tuile" data-act="type" data-v="envoyer"><span class="ico">📤</span><span><b>Envoyer un colis</b><span class="sous">Le livreur vient le prendre chez moi et le livre</span></span></button>
+    <p class="titre-section">Mon livreur</p>
+    <div class="carte"><div class="livreur" style="border:0;padding:0;cursor:default"><span class="avatar">${fav.init}</span><span><span class="nom">${fav.nom} <span class="badge fav">★ Favori</span></span><span class="sous">${fav.note} · ${fav.courses} courses${fav.equipe ? ` · équipe de ${fav.equipe.length}` : ''}</span></span>${S.dispo && !S.indispo.includes(fav.id) ? '<span class="badge ok">Disponible</span>' : '<span class="badge ko">Occupé</span>'}</div></div>
+  </div>`;
+}
+function cLieux() {
+  const rec = S.type === 'recuperer';
+  const ok = lieuOk(S.depart) && lieuOk(S.arrivee) && S.colis.trim() && (!S.cod || Number(S.codMontant) > 0);
+  return `${entete(rec ? 'Récupérer un colis' : 'Envoyer un colis', 'accueil', '1 / 3')}
+  <div class="corps">
+    ${blocLieu('depart', rec ? 'Où récupérer le colis' : 'Chez moi (départ)', 'Ex. : marché Dantokpa, allée des tissus, boutique de Maman Rosine')}
+    ${blocLieu('arrivee', rec ? 'Chez moi (arrivée)' : 'Où livrer', 'Ex. : Fidjrossè, après la station, la maison au portail vert')}
+    <label class="champ">Le colis <input type="text" data-bind="colis" value="${esc(S.colis)}" placeholder="Ex. : 2 pagnes dans un sachet noir"></label>
+    <button class="btn ${S.photoColis ? 'fait' : ''}" data-act="photo" style="${S.photoColis ? 'background:var(--succes-fond);color:var(--succes);border-color:var(--succes)' : ''}">📷 ${S.photoColis ? 'Photo ajoutée' : 'Photo du colis (facultatif)'}</button>
+    <div class="champ" style="font-weight:600;font-size:.875rem">Le livreur doit-il encaisser l’argent du colis ?</div>
+    <div class="choix"><button data-act="cod" data-v="0" aria-pressed="${!S.cod}">Non</button><button data-act="cod" data-v="1" aria-pressed="${S.cod}">Oui</button></div>
+    ${S.cod ? `<label class="champ">Montant à encaisser <input type="number" inputmode="numeric" min="0" step="50" data-bind="codMontant" value="${esc(S.codMontant)}" placeholder="15000" class="num"></label>` : ''}
+  </div>
+  <div class="pied"><button class="btn prim grand" data-act="c" data-v="livreurs" ${ok ? '' : 'disabled'}>Choisir le livreur</button></div>`;
+}
+function cLivreurs() {
+  const tri = { proche: (a, b) => a.km - b.km, prix: (a, b) => prixGrille(a) - prixGrille(b), note: (a, b) => b.note - a.note };
+  const liste = LIVREURS.filter(l => l.id !== S.favori).sort(tri[S.filtre]);
+  const carte = l => {
+    const ko = S.indispo.includes(l.id);
+    return `<button class="livreur" data-act="choisir" data-v="${l.id}" aria-pressed="${S.livreurId === l.id}" ${ko ? 'disabled' : ''}>
+      <span class="avatar">${l.init}</span>
+      <span><span class="nom">${l.nom} ${l.id === S.favori ? '<span class="badge fav">★ Favori</span>' : ''} ${ko ? '<span class="badge ko">Indisponible</span>' : ''}</span>
+      <span class="sous">★ ${l.note} · ${l.courses} courses · à ${String(l.km).replace('.', ',')} km${l.equipe ? ` · équipe de ${l.equipe.length}` : ''}</span></span>
+      <span class="prix">${fmt(prixGrille(l))}<small>${l.negocie ? 'à discuter' : 'prix fixe'}</small></span></button>`;
+  };
+  return `${entete('Qui y va ?', 'lieux', '2 / 3')}
+  <div class="corps">
+    <p class="sous" style="margin:0">${esc(S.depart.quartier)} → ${esc(S.arrivee.quartier)} · prix tirés de la grille de chaque livreur</p>
+    <p class="titre-section">Mon favori</p>
+    ${carte(L(S.favori))}
+    <p class="titre-section">Autres livreurs</p>
+    <div class="puces">${[['proche', 'Le plus proche'], ['prix', 'Le moins cher'], ['note', 'Le mieux noté']].map(([k, t]) => `<button data-act="filtre" data-v="${k}" aria-pressed="${S.filtre === k}">${t}</button>`).join('')}</div>
+    ${liste.map(carte).join('')}
+  </div>
+  <div class="pied"><button class="btn prim grand" data-act="c" data-v="recap" ${S.livreurId ? '' : 'disabled'}>Continuer</button></div>`;
+}
+function cRecap() {
+  const l = L(S.livreurId), p = prixGrille(l);
+  return `${entete('Vérifier et envoyer', 'livreurs', '3 / 3')}
+  <div class="corps">
+    <div class="carte">
+      <div class="ligne"><span>Mission</span><span>${typeLabel()}</span></div>
+      <div class="ligne"><span>Départ</span><span>${esc(S.depart.quartier)}</span></div>
+      <div class="ligne"><span>Arrivée</span><span>${esc(S.arrivee.quartier)}</span></div>
+      <div class="ligne"><span>Colis</span><span>${esc(S.colis)}</span></div>
+      ${S.cod ? `<div class="ligne"><span>À encaisser</span><span class="num">${fmt(S.codMontant)}</span></div>` : ''}
+      <div class="ligne"><span>Livreur</span><span>${l.nom}</span></div>
+      <div class="ligne"><span>Prix de la course</span><span class="num">${fmt(p)}</span></div>
+    </div>
+    ${l.negocie ? `<label class="champ">Proposer un autre prix (facultatif) <input type="number" inputmode="numeric" step="50" class="num" data-bind="propose" value="${esc(S.propose)}" placeholder="${p}"></label>` : `<p class="sous" style="margin:0">${l.nom} ne discute pas ses prix.</p>`}
+    <div class="champ" style="font-weight:600;font-size:.875rem">Je paie la course</div>
+    <div class="choix"><button data-act="paiement" data-v="especes" aria-pressed="${S.paiement === 'especes'}">En espèces</button><button data-act="paiement" data-v="momo" aria-pressed="${S.paiement === 'momo'}">Mobile Money</button></div>
+    ${S.paiement === 'momo' ? `<div class="alerte info">À la livraison, vous envoyez l’argent directement sur le Mobile Money de ${l.nom}, comme d’habitude. Navette ne touche pas l’argent : elle l’inscrit.</div>` : ''}
+  </div>
+  <div class="pied"><button class="btn prim grand" data-act="envoyer">Envoyer à ${l.nom}</button></div>`;
+}
+function statutTexte(m) {
+  const n = L(m.livreur).nom;
+  return { envoyee: `En attente de la réponse de ${n}`, contre: `${n} propose ${fmt(m.contre)}`, acceptee: `${m.qui} va au point de départ`, recupere: `${m.qui} a le colis, en route`, livree: 'Livré' }[m.statut];
+}
+function cSuivi() {
+  const m = S.mission, l = L(m.livreur);
+  const rang = { envoyee: 0, contre: 0, acceptee: 1, recupere: 2, livree: 3 }[m.statut];
+  const etat = i => i < rang ? 'fait' : i === rang ? 'encours' : 'avenir';
+  const destinataireTiers = S.type === 'envoyer';
+  return `${entete('Suivi', 'accueil')}
+  <div class="corps">
+    ${m.statut === 'contre' ? `<div class="carte"><h3>${l.nom} propose ${fmt(m.contre)}</h3><p class="sous" style="margin:0 0 10px">Vous aviez proposé ${fmt(m.propose)}.</p><div class="rangee"><button class="btn" data-act="contre-non">Refuser</button><button class="btn prim" data-act="contre-oui">Accepter</button></div></div>` : ''}
+    ${m.statut === 'envoyee' ? `<div class="alerte att">${l.nom} a reçu la demande. Sans réponse dans 5 min, nous vous proposons d’autres livreurs.</div>` : ''}
+    <ol class="frise">
+      <li class="${etat(0)}"><span><b>Demande envoyée à ${l.nom}</b><small>${fmt(m.prix)}${m.propose && m.statut !== 'envoyee' ? '' : ''}</small></span></li>
+      <li class="${etat(1)}"><span><b>Acceptée${m.qui && m.qui !== l.nom ? ` · ${m.qui} y va` : ''}</b><small>En route vers ${esc(S.depart.quartier)}</small></span></li>
+      <li class="${etat(2)}"><span><b>Colis récupéré</b><small>En route vers ${esc(S.arrivee.quartier)}</small></span></li>
+      <li class="${etat(3)}"><span><b>Livré</b><small>Code de remise vérifié</small></span></li>
+    </ol>
+    ${rang >= 1 ? `<div class="carte"><h3>Code de remise</h3><div class="code">${m.code}</div><p class="sous" style="margin:0 0 10px">${destinataireTiers ? 'Le destinataire donne ce code au livreur. Sans lui, le colis n’est pas remis.' : 'Donnez ce code au livreur quand il vous remet le colis.'}</p>${destinataireTiers ? '<button class="btn" style="width:100%" data-act="noop">Envoyer le code par WhatsApp</button>' : ''}</div>` : ''}
+    ${rang >= 1 ? `<div class="contact"><span class="avatar">${l.init}</span><span style="flex:1"><b>${m.qui}</b><br><span class="sous">${l.nom}${m.qui !== l.nom ? ' · son équipe' : ''}</span></span><button class="btn" data-act="noop" aria-label="Appeler">📞</button><button class="btn" data-act="noop" aria-label="WhatsApp">💬</button></div>` : ''}
+    <button class="btn" data-act="noop">Partager le suivi par WhatsApp</button>
+  </div>`;
+}
+function cFin() {
+  const m = S.mission, l = L(m.livreur);
+  return `${entete('Livré', 'accueil')}
+  <div class="corps">
+    <div class="alerte ok"><b>${esc(S.colis)}</b> livré à ${esc(S.arrivee.quartier)} par ${m.qui}. Code vérifié.</div>
+    ${S.cod ? `<div class="carte"><div class="ligne"><span>Argent du colis</span><span class="num">${fmt(S.codMontant)}</span></div><div class="ligne"><span>Encaissé en</span><span>${m.encaisse === 'momo' ? 'Mobile Money' : 'Espèces'}</span></div><p class="sous" style="margin:6px 0 0">Déclaré par le livreur.</p></div>` : ''}
+    <div class="carte"><div class="ligne"><span>Course</span><span class="num">${fmt(m.prix)}</span></div>
+      ${!S.cPaie || S.cPaie === 'plus_tard' ? `
+        <p style="margin:8px 0 4px">Mobile Money de ${l.nom} :</p>
+        <div class="contact"><span class="num" style="flex:1;font-size:1.25rem">${l.momo}</span><span class="badge att">${l.operateur}</span><button class="btn" data-act="noop">Copier</button></div>
+        <p style="margin:12px 0 6px;font-weight:600">${S.cPaie ? 'Vous avez payé depuis ?' : 'Comment avez-vous payé la course ?'}</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn" data-act="cpaie" data-v="especes">J’ai payé en espèces</button>
+          <button class="btn" data-act="cpaie" data-v="momo">J’ai envoyé par Mobile Money</button>
+          ${S.cPaie ? '' : '<button class="btn" data-act="cpaie" data-v="plus_tard">Je paierai plus tard</button>'}
+        </div>` : ''}
+      ${S.cPaie ? `<div class="alerte ${etatPaiement().cls}" style="margin-top:8px">${etatPaiement().texte}</div>` : ''}
+    </div>
+    <div class="carte" style="text-align:center"><h3>Comment s’est passée la course ?</h3>
+      <div class="etoiles">${[1, 2, 3, 4, 5].map(i => `<button data-act="note" data-v="${i}" class="${i <= S.note ? 'on' : ''}" aria-label="${i} étoile${i > 1 ? 's' : ''}">★</button>`).join('')}</div>
+      ${S.favori === l.id ? `<span class="badge fav">★ ${l.nom} est votre favori</span>` : `<button class="btn" data-act="favori" data-v="${l.id}">★ Garder ${l.nom} comme favori</button>`}
+    </div>
+  </div>
+  <div class="pied"><button class="btn prim grand" data-act="nouvelle">Nouvelle mission</button></div>`;
+}
+
+// Chaque côté déclare ; la course est « inscrite » sur la déclaration du livreur, qui a reçu l'argent.
+function etatPaiement() {
+  const lp = S.lPaie, cp = S.cPaie, n = S.mission.qui, p = fmt(S.mission.prix);
+  if (lp === 'momo_attente') return { cls: 'att', court: 'SMS attendu', texte: `${n} attend le SMS de Mobile Money pour confirmer ${p}.` };
+  if (!cp) return { cls: 'att', court: lp === 'plus_tard' ? 'À régler' : MODE[lp], texte: '' };
+  if (lp === 'plus_tard' && cp === 'plus_tard') return { cls: 'att', court: 'À régler', texte: `Course à régler : ${p}. ${n} le voit aussi.` };
+  if (lp === 'plus_tard') return { cls: 'att', court: 'À confirmer', texte: `Vous avez payé (${MODE[cp]}). En attente de la confirmation de ${n}.` };
+  if (lp === cp) return { cls: 'ok', court: MODE[lp], texte: `Payé en ${MODE[lp]}, déclaré des deux côtés. C’est inscrit.` };
+  return { cls: 'ko', court: 'À vérifier', texte: `À vérifier : ${n} déclare « ${MODE[lp]} », vous « ${MODE[cp]} ».` };
+}
+
+/* ---------- Livreur ---------- */
+function lEntete() {
+  const l = L(S.mission?.livreur || 'kossi');
+  return `<div class="entete"><span class="avatar" style="width:40px;height:40px">${l.init}</span><h2>${l.nom}</h2>
+    <span class="dispo"><span class="sous">${S.dispo ? 'Disponible' : 'Pas dispo'}</span><button class="interrupteur" role="switch" aria-checked="${S.dispo}" data-act="dispo" aria-label="Disponible"></button></span></div>`;
+}
+function lNav() {
+  const n = S.mission && ['envoyee'].includes(S.mission.statut);
+  return `<nav class="nav">${[['demandes', '📋', 'Missions'], ['journee', '📒', 'Ma journée'], ['grille', '🏷️', 'Mes prix'], ['equipe', '👥', 'Équipe']].map(([k, i, t]) =>
+    `<button data-act="l" data-v="${k}" aria-current="${S.l === k}"><span class="ico">${i}</span>${t}${k === 'demandes' && n ? '<span class="pastille"></span>' : ''}</button>`).join('')}</nav>`;
+}
+function lDemandes() {
+  const m = S.mission;
+  if (!m || m.statut === 'livree') {
+    const livree = m && m.statut === 'livree';
+    const smsAttendu = livree && S.lPaie === 'momo_attente';
+    const clientDitPaye = livree && S.lPaie === 'plus_tard' && (S.cPaie === 'especes' || S.cPaie === 'momo');
+    const aConfirmer = smsAttendu || clientDitPaye;
+    const viaMomo = smsAttendu || S.cPaie === 'momo';
+    const refOk = S.refSms.trim().length >= 6;
+    return `${lEntete()}<div class="corps">
+      ${aConfirmer ? `<div class="carte"><h3>${smsAttendu ? `SMS attendu : ${fmt(m.prix)} d’Awa` : `Awa dit avoir payé ${fmt(m.prix)} (${MODE[S.cPaie]})`}</h3>
+        ${viaMomo ? `<p class="sous" style="margin:0 0 10px">Vérifiez le SMS de ${L(m.livreur).operateur} Mobile Money, puis confirmez.</p>
+        <label class="champ">Référence de la transaction (dans le SMS)<input type="text" class="num" data-bind="refSms" value="${esc(S.refSms)}" placeholder="Ex. : 7712345678"></label>` : ''}
+        <div class="rangee" style="margin-top:10px"><button class="btn danger" data-act="noop">Pas reçu</button><button class="btn prim" data-act="lpaie" data-v="${viaMomo ? 'momo' : 'especes'}" ${!viaMomo || refOk ? '' : 'disabled'}>Reçu</button></div></div>` : ''}
+      ${livree && !aConfirmer ? `<div class="alerte ${etatPaiement().cls}">Course terminée : ${esc(S.depart.quartier)} → ${esc(S.arrivee.quartier)}, ${fmt(m.prix)} · ${etatPaiement().court}${etatPaiement().cls === 'ok' || (!S.cPaie && S.lPaie !== 'plus_tard') ? ', inscrit' : ''}.</div>` : ''}
+      ${aConfirmer ? '' : `<div class="vide"><span class="ico">🛵</span>${S.dispo ? 'Pas de demande pour l’instant.<br>Les clients vous trouvent tant que vous êtes disponible.' : 'Vous êtes invisible pour les nouveaux clients.'}</div>`}
+      </div>${lNav()}`;
+  }
+  const l = L(m.livreur), grille = prixGrille(l);
+  if (m.statut === 'envoyee' || m.statut === 'contre') {
+    return `${lEntete()}<div class="corps">
+      <p class="titre-section">Nouvelle demande · à l’instant</p>
+      <div class="carte">
+        <h3>${typeLabel()}</h3>
+        <div class="ligne"><span>Départ</span><span>${esc(S.depart.quartier)}</span></div>
+        <div class="ligne"><span>Arrivée</span><span>${esc(S.arrivee.quartier)}</span></div>
+        <div class="ligne"><span>Colis</span><span>${esc(S.colis)}</span></div>
+        ${S.cod ? `<div class="ligne"><span>À encaisser</span><span class="num">${fmt(S.codMontant)}</span></div>` : ''}
+        <div class="ligne"><span>Course payée en</span><span>${S.paiement === 'momo' ? 'Mobile Money' : 'Espèces'}</span></div>
+        <div class="ligne"><span>Votre prix</span><span class="num">${fmt(grille)}</span></div>
+        ${m.propose ? `<div class="ligne"><span><b style="color:var(--attente)">Le client propose</b></span><span class="num"><b>${fmt(m.propose)}</b></span></div>` : ''}
+      </div>
+      ${m.statut === 'contre' ? `<div class="alerte att">Vous avez proposé ${fmt(m.contre)}. En attente du client.</div>` : `
+      ${l.equipe ? `<label class="champ">Qui y va ? <select data-bind="equipier">${l.equipe.map(e => `<option ${S.equipier === e ? 'selected' : ''}>${e}</option>`).join('')}</select></label>` : ''}
+      ${m.propose ? `<div class="rangee"><input type="number" inputmode="numeric" step="50" class="num" data-bind="contreSaisie" value="${esc(S.contreSaisie)}" placeholder="Votre prix"><button class="btn" data-act="contre" ${Number(S.contreSaisie) > 0 ? '' : 'disabled'}>Contre-proposer</button></div>` : ''}
+      <div class="rangee"><button class="btn danger" data-act="refuser">Refuser</button><button class="btn prim grand" data-act="accepter">Accepter${m.propose ? ' ' + fmt(m.propose) : ''}</button></div>`}
+    </div>${lNav()}`;
+  }
+  const dep = S.depart, arr = S.arrivee;
+  const cible = m.statut === 'acceptee' ? dep : arr;
+  const lieuCarte = (p, titre) => `<div class="carte"><h3>${titre} · ${esc(p.quartier)}</h3>
+    <p style="margin:0 0 8px">${esc(p.repere) || '<span class="sous">Pas de repère écrit</span>'}</p>
+    ${p.vocal ? `<div class="vocal" style="margin-bottom:8px"><b>▶</b><i></i><span class="num">0:08</span></div>` : ''}
+    <div class="contact">${p.pin ? '<button class="btn" style="flex:1" data-act="noop">📍 Ouvrir l’épingle</button>' : ''}<button class="btn" style="flex:1" data-act="noop">📞 ${esc(p.tel)}</button></div></div>`;
+  return `${lEntete()}<div class="corps">
+    <p class="titre-section">Mission en cours${m.qui !== l.nom ? ` · confiée à ${m.qui}` : ''}</p>
+    ${lieuCarte(cible, m.statut === 'acceptee' ? 'Récupérer' : 'Livrer')}
+    ${m.statut === 'acceptee' ? `<p class="sous" style="margin:0">Colis : ${esc(S.colis)}</p>
+      <button class="btn grand prim" data-act="recupere">J’ai récupéré le colis</button>` : `
+      ${S.cod ? `<div class="carte"><h3>Encaisser ${fmt(S.codMontant)}</h3><div class="choix"><button data-act="encaisse" data-v="especes" aria-pressed="${S.encaisseMode === 'especes'}">Espèces</button><button data-act="encaisse" data-v="momo" aria-pressed="${S.encaisseMode === 'momo'}">MoMo</button></div></div>` : ''}
+      <label class="champ">Code de remise donné par ${S.type === 'envoyer' ? 'le destinataire' : 'le client'}<input type="text" inputmode="numeric" maxlength="4" class="num" style="font-size:1.5rem;letter-spacing:.3em;text-align:center" data-bind="codeSaisi" value="${esc(S.codeSaisi)}" placeholder="····"></label>
+      ${S.codeSaisi.length === 4 && S.codeSaisi !== m.code ? '<div class="alerte ko">Ce n’est pas le bon code. Ne remettez pas le colis.</div>' : ''}
+      <div class="carte"><h3>Course : ${fmt(m.prix)}, payée comment ?</h3>
+        <p class="sous" style="margin:0 0 8px">Obligatoire pour terminer la course.</p>
+        <div class="choix" style="flex-direction:column">
+          <button data-act="lpaie" data-v="especes" aria-pressed="${S.lPaie === 'especes'}">Espèces</button>
+          <button data-act="lpaie" data-v="momo" aria-pressed="${S.lPaie === 'momo' || S.lPaie === 'momo_attente'}">Mobile Money</button>
+          <button data-act="lpaie" data-v="plus_tard" aria-pressed="${S.lPaie === 'plus_tard'}">Pas encore payé</button>
+        </div>
+        ${S.lPaie === 'momo' ? `<label class="champ" style="margin-top:10px">Référence de la transaction (dans le SMS)<input type="text" class="num" data-bind="refSms" value="${esc(S.refSms)}" placeholder="Ex. : 7712345678"></label>
+          <button class="lien" data-act="lpaie" data-v="momo_attente">Le SMS n’est pas encore arrivé</button>` : ''}
+        ${S.lPaie === 'momo_attente' ? `<p class="sous" style="margin:10px 0 0">Vous confirmerez quand le SMS arrive ; la course reste ouverte, vous pouvez en prendre une autre. <button class="lien" data-act="lpaie" data-v="momo">J’ai le SMS</button></p>` : ''}
+        ${S.lPaie === 'plus_tard' ? '<p class="sous" style="margin:10px 0 0">La course reste « à régler », chez vous et chez le client.</p>' : ''}
+      </div>
+      <button class="btn grand prim" data-act="livrer" ${S.codeSaisi === m.code && (!S.cod || S.encaisseMode) && S.lPaie && (S.lPaie !== 'momo' || S.refSms.trim().length >= 6) ? '' : 'disabled'}>Colis remis</button>
+      <p class="sous" style="margin:0;text-align:center">Pour la démo, le code est affiché chez le client : <b class="num">${m.code}</b></p>`}
+  </div>${lNav()}`;
+}
+function lJournee() {
+  const l = L(S.mission?.livreur || 'kossi');
+  const lignes = HISTORIQUE.map(c => ({ ...c, qui: l.equipe ? c.qui : l.nom }));
+  if (S.mission?.statut === 'livree') {
+    const e = etatPaiement();
+    lignes.push({ h: 'à l’instant', trajet: `${S.depart.quartier} → ${S.arrivee.quartier}`, prix: S.mission.prix, qui: S.mission.qui,
+      mode: { especes: 'Espèces', momo: 'MoMo', momo_attente: 'SMS attendu', plus_tard: 'À régler' }[S.lPaie], verifier: e.cls === 'ko' });
+  }
+  // Ces totaux viennent du relevé que Trame tient pour chaque livreur ; Navette n'additionne rien elle-même.
+  const somme = (mode, qui) => lignes.filter(c => c.mode === mode && (!qui || c.qui === qui)).reduce((t, c) => t + c.prix, 0);
+  const especes = somme('Espèces'), momo = somme('MoMo');
+  const ouvertes = lignes.filter(c => c.mode === 'À régler' || c.mode === 'SMS attendu').length;
+  const membres = l.equipe ? l.equipe.map(e => e === 'Moi' ? l.nom : e) : null;
+  const badge = c => c.verifier ? 'ko' : c.mode === 'Espèces' || c.mode === 'MoMo' ? 'neutre' : 'att';
+  return `${lEntete()}<div class="corps">
+    <div class="carte">
+      <div class="ligne"><span><b style="color:var(--encre)">Encaissé aujourd’hui</b></span><span class="num"><b>${fmt(especes + momo)}</b></span></div>
+      <div class="ligne"><span>dont espèces</span><span class="num">${fmt(especes)}</span></div>
+      <div class="ligne"><span>dont Mobile Money</span><span class="num">${fmt(momo)}</span></div>
+      <div class="ligne"><span>À régler ou en attente</span><span>${ouvertes} course${ouvertes > 1 ? 's' : ''}</span></div>
+      <p style="margin:6px 0 0"><span class="badge info">Total tenu par Trame</span></p></div>
+    ${membres ? `<p class="titre-section">Par livreur</p><div class="carte">${membres.map(n => `<div class="ligne"><span>${n}</span><span class="num">${fmt(somme('Espèces', n))} esp. · ${fmt(somme('MoMo', n))} MoMo</span></div>`).join('')}</div>` : ''}
+    <p class="titre-section">Courses</p>
+    ${lignes.map(c => `<div class="carte" style="padding:10px 14px"><div class="ligne"><span>${c.h}${membres ? ` · ${c.qui}` : ''}</span><span class="num">${fmt(c.prix)}</span></div><div class="ligne"><span>${esc(c.trajet)}</span><span class="badge ${badge(c)}">${c.verifier ? 'À vérifier' : c.mode}</span></div></div>`).join('')}
+    <p class="sous" style="margin:0">Remplace le carnet. Chaque course se termine en disant comment elle a été payée ; espèces et Mobile Money sont inscrits dans Trame, déclarés par celui qui a reçu l’argent.</p>
+  </div>${lNav()}`;
+}
+function lGrille() {
+  const l = L(S.mission?.livreur || 'kossi');
+  return `${lEntete()}<div class="corps">
+    <p class="titre-section">Mes prix par zone</p>
+    <div class="carte">${ZONES.map(z => `<div class="grille-zone"><span>${z.nom}</span><input type="number" inputmode="numeric" step="50" data-grille="${l.id}.${z.cle}" value="${l.grille[z.cle]}" aria-label="${z.nom}"></div>`).join('')}</div>
+    <div class="carte dispo"><span style="flex:1"><b>Accepter qu’on discute mes prix</b><br><span class="sous">Les clients peuvent proposer un autre prix</span></span><button class="interrupteur" role="switch" aria-checked="${l.negocie}" data-act="negocie" data-v="${l.id}" aria-label="Négociation"></button></div>
+  </div>${lNav()}`;
+}
+function lEquipe() {
+  const l = L(S.mission?.livreur || 'kossi');
+  if (!l.equipe) return `${lEntete()}<div class="corps"><div class="vide"><span class="ico">👥</span>Vous travaillez seul.<br><button class="btn" style="margin-top:12px" data-act="noop">Ajouter un livreur à mon équipe</button></div></div>${lNav()}`;
+  const occupe = S.mission && ['acceptee', 'recupere'].includes(S.mission.statut) ? S.mission.qui : null;
+  return `${lEntete()}<div class="corps">
+    <p class="titre-section">Mon équipe</p>
+    ${l.equipe.map(e => { const n = e === 'Moi' ? l.nom : e; return `<div class="carte contact"><span class="avatar">${n[0]}</span><span style="flex:1"><b>${n}</b><br><span class="sous">${e === 'Moi' ? 'Vous' : 'Livreur de l’équipe'}</span></span>${occupe === n ? '<span class="badge att">En course</span>' : '<span class="badge ok">Libre</span>'}</div>`; }).join('')}
+    <button class="btn" data-act="noop">Ajouter un livreur</button>
+    <p class="sous" style="margin:0">Les clients vous choisissent, vous ; vous confiez la course à qui vous voulez.</p>
+  </div>${lNav()}`;
+}
+
+/* ---------- Rendu et actions ---------- */
+function render() {
+  const cv = { accueil: cAccueil, lieux: cLieux, livreurs: cLivreurs, recap: cRecap, suivi: cSuivi, fin: cFin };
+  const lv = { demandes: lDemandes, journee: lJournee, grille: lGrille, equipe: lEquipe };
+  document.getElementById('client').innerHTML = cv[S.c]();
+  document.getElementById('livreur').innerHTML = lv[S.l]();
+  const lnom = L(S.mission?.livreur || 'kossi').nom;
+  document.getElementById('etiq-livreur').textContent = `Livreur · ${lnom}${L(S.mission?.livreur || 'kossi').equipe ? ' et son équipe' : ''}`;
+  document.querySelectorAll('.onglets button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.vue));
+  document.getElementById('col-client').toggleAttribute('hidden-mobile', S.vue !== 'client');
+  document.getElementById('col-livreur').toggleAttribute('hidden-mobile', S.vue !== 'livreur');
+  document.getElementById('pastille-l').hidden = !(S.mission?.statut === 'envoyee' && S.vue === 'client');
+}
+function set(chemin, val) { const k = chemin.split('.'); if (k.length === 2) S[k[0]][k[1]] = val; else S[k[0]] = val; }
+const champsLiveRender = new Set(['colis', 'codMontant', 'depart.quartier', 'arrivee.quartier', 'depart.repere', 'arrivee.repere', 'depart.tel', 'arrivee.tel', 'contreSaisie', 'codeSaisi', 'equipier', 'propose', 'refSms']);
+
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.grille) { const [id, z] = t.dataset.grille.split('.'); L(id).grille[z] = Number(t.value) || 0; return; }
+  if (!t.dataset.bind) return;
+  set(t.dataset.bind, t.value);
+  if (t.tagName === 'SELECT' || t.dataset.bind === 'codeSaisi') { render(); return; }
+  // Re-rendre pour réactiver les boutons, en rendant le focus au champ.
+  if (champsLiveRender.has(t.dataset.bind)) majBoutons();
+});
+function majBoutons() {
+  const pos = document.activeElement, id = pos?.dataset?.bind, sel = pos?.selectionStart;
+  render();
+  if (id) { const n = document.querySelector(`[data-bind="${id}"]`); if (n) { n.focus(); try { n.setSelectionRange(sel, sel); } catch (_) {} } }
+}
+
+const code4 = () => String(1000 + Math.floor(Math.random() * 9000));
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const v = b.dataset.v, m = S.mission;
+  switch (b.dataset.act) {
+    case 'reset': reset(); return;
+    case 'vue': S.vue = v; break;
+    case 'c': S.c = v; break;
+    case 'l': S.l = v; break;
+    case 'type':
+      S.type = v; S.depart = vierge(); S.arrivee = vierge(); S.livreurId = null; S.propose = '';
+      if (v === 'recuperer') S.arrivee = { ...MAISON }; else S.depart = { ...MAISON };
+      S.c = 'lieux'; break;
+    case 'pin': S[v].pin = !S[v].pin; break;
+    case 'vocal': S[v].vocal = !S[v].vocal; break;
+    case 'photo': S.photoColis = !S.photoColis; break;
+    case 'cod': S.cod = v === '1'; break;
+    case 'filtre': S.filtre = v; break;
+    case 'choisir': S.livreurId = v; break;
+    case 'paiement': S.paiement = v; break;
+    case 'envoyer': {
+      const l = L(S.livreurId), p = prixGrille(l), prop = Number(S.propose);
+      S.mission = { livreur: l.id, statut: 'envoyee', prix: p, propose: l.negocie && prop > 0 && prop !== p ? prop : null, contre: null, qui: null, code: code4(), encaisse: null };
+      S.equipier = 'Moi'; S.contreSaisie = ''; S.codeSaisi = ''; S.encaisseMode = null; S.lPaie = null; S.cPaie = null; S.refSms = ''; S.note = 0;
+      S.c = 'suivi'; S.l = 'demandes'; break;
+    }
+    case 'accepter': {
+      const l = L(m.livreur);
+      if (m.propose) m.prix = m.propose;
+      m.qui = S.equipier === 'Moi' || !l.equipe ? l.nom : S.equipier; m.statut = 'acceptee'; break;
+    }
+    case 'refuser': S.indispo.push(m.livreur); S.mission = null; S.livreurId = null; S.c = 'livreurs'; break;
+    case 'contre': m.contre = Number(S.contreSaisie); m.statut = 'contre'; break;
+    case 'contre-oui': { const l = L(m.livreur); m.prix = m.contre; m.qui = S.equipier === 'Moi' || !l.equipe ? l.nom : S.equipier; m.statut = 'acceptee'; break; }
+    case 'contre-non': S.indispo.push(m.livreur); S.mission = null; S.livreurId = null; S.c = 'livreurs'; break;
+    case 'recupere': m.statut = 'recupere'; break;
+    case 'encaisse': S.encaisseMode = v; break;
+    case 'livrer': m.statut = 'livree'; m.encaisse = S.encaisseMode; S.c = 'fin'; break;
+    case 'lpaie': S.lPaie = v; break;
+    case 'cpaie': S.cPaie = v; break;
+    case 'note': S.note = Number(v); break;
+    case 'favori': S.favori = v; break;
+    case 'nouvelle': S.mission = null; S.c = 'accueil'; S.l = 'demandes'; S.indispo = []; break;
+    case 'dispo': S.dispo = !S.dispo; break;
+    case 'negocie': L(v).negocie = !L(v).negocie; break;
+    case 'noop': return;
+  }
+  render();
+});
+reset();
+</script>
+</body>
+</html>
