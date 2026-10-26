@@ -180,18 +180,20 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 <body>
 
 <header class="bandeau">
-  <h1>Navette · parcours minimal</h1>
+  <h1>Navette · parcours multi-rôles</h1>
   <button class="lien" data-act="reset">Recommencer</button>
-  <p>Maquette cliquable, données fictives. Deux téléphones, celui du client et celui du livreur : ce que l'un envoie arrive chez l'autre.</p>
+  <p>Maquette cliquable, données fictives. Quatre rôles autour d'une même mission : client, commerçant, agence et livreur.</p>
 </header>
 
 <div class="onglets" role="group" aria-label="Côté">
-  <button data-act="vue" data-v="client" aria-pressed="true">Côté client</button>
-  <button data-act="vue" data-v="livreur" aria-pressed="false">Côté livreur<span class="pastille" id="pastille-l" hidden></span></button>
+  <button data-act="vue" data-v="client" aria-pressed="true">Client</button>
+  <button data-act="vue" data-v="commercant" aria-pressed="false">Commerçant</button>
+  <button data-act="vue" data-v="agence" aria-pressed="false">Agence</button>
+  <button data-act="vue" data-v="livreur" aria-pressed="false">Livreur<span class="pastille" id="pastille-l" hidden></span></button>
 </div>
 
 <main class="scene">
-  <section class="colonne" id="col-client"><p class="etiquette">Client · Awa, boutique à Gbégamey</p><div class="tel" id="client"></div></section>
+  <section class="colonne" id="col-client"><p class="etiquette" id="etiq-client">Client · Awa, boutique à Gbégamey</p><div class="tel" id="client"></div></section>
   <section class="colonne" id="col-livreur" hidden-mobile><p class="etiquette" id="etiq-livreur">Livreur</p><div class="tel" id="livreur"></div></section>
 </main>
 
@@ -204,11 +206,12 @@ const ZONES = [
   { cle: 'porto', nom: 'Cotonou ↔ Porto-Novo' },
 ];
 const LIVREURS = [
-  { id: 'kossi', nom: 'Kossi', init: 'K', note: 4.8, courses: 312, km: 1.2, equipe: ['Moi', 'Sèna', 'Rachidi'], grille: { meme: 500, cotonou: 1000, calavi: 1500, porto: 3000 }, negocie: true, momo: '97 12 34 56', operateur: 'MTN' },
-  { id: 'afi', nom: 'Afi', init: 'A', note: 4.9, courses: 128, km: 0.6, equipe: null, grille: { meme: 500, cotonou: 1200, calavi: 1500, porto: 3500 }, negocie: false, momo: '95 44 21 08', operateur: 'Moov' },
-  { id: 'ismael', nom: 'Ismaël', init: 'I', note: 4.5, courses: 54, km: 2.8, equipe: null, grille: { meme: 300, cotonou: 800, calavi: 1300, porto: 2500 }, negocie: true, momo: '96 30 77 15', operateur: 'MTN' },
-  { id: 'mathieu', nom: 'Mathieu', init: 'M', note: 4.6, courses: 201, km: 3.4, equipe: ['Moi', 'Chabi'], grille: { meme: 500, cotonou: 1000, calavi: 2000, porto: 3000 }, negocie: true, momo: '94 18 62 40', operateur: 'Moov' },
+  { id: 'kossi', nom: 'Kossi', init: 'K', note: 4.8, courses: 312, km: 1.2, agence: 'Grâce EXPRESS', equipe: ['Moi', 'Sèna', 'Rachidi'], grille: { meme: 500, cotonou: 1000, calavi: 1500, porto: 3000 }, negocie: true, momo: '97 12 34 56', operateur: 'MTN' },
+  { id: 'afi', nom: 'Afi', init: 'A', note: 4.9, courses: 128, km: 0.6, agence: null, equipe: null, grille: { meme: 500, cotonou: 1200, calavi: 1500, porto: 3500 }, negocie: false, momo: '95 44 21 08', operateur: 'Moov' },
+  { id: 'ismael', nom: 'Ismaël', init: 'I', note: 4.5, courses: 54, km: 2.8, agence: null, equipe: null, grille: { meme: 300, cotonou: 800, calavi: 1300, porto: 2500 }, negocie: true, momo: '96 30 77 15', operateur: 'MTN' },
+  { id: 'mathieu', nom: 'Mathieu', init: 'M', note: 4.6, courses: 201, km: 3.4, agence: 'Grâce EXPRESS', equipe: ['Moi', 'Chabi'], grille: { meme: 500, cotonou: 1000, calavi: 2000, porto: 3000 }, negocie: true, momo: '94 18 62 40', operateur: 'Moov' },
 ];
+const PARCEL_TYPES = ['Repas', 'Gâteau / pâtisserie', 'Vêtements', 'Document', 'Colis ordinaire', 'Autre'];
 const MAISON = { quartier: 'Gbégamey', repere: 'En face de la pharmacie Gbégamey, portail bleu, boutique « Awa Couture »', tel: '97 00 00 00', pin: true, vocal: false };
 const HISTORIQUE = [
   { h: '08:40', trajet: 'Dantokpa → Fidjrossè', prix: 1000, mode: 'Espèces', qui: 'Kossi' },
@@ -223,7 +226,7 @@ let S;
 function reset() {
   S = {
     vue: 'client', c: 'accueil', l: 'demandes',
-    type: null, depart: vierge(), arrivee: vierge(), colis: '', cod: false, codMontant: '',
+    type: null, depart: vierge(), arrivee: vierge(), colisType: '', colis: '', cod: false, codMontant: '',
     filtre: 'proche', livreurId: null, propose: '', paiement: 'especes',
     mission: null, indispo: [], favori: 'kossi', dispo: true, note: 0, lPaie: null, cPaie: null, refSms: '',
     contreSaisie: '', codeSaisi: '', encaisseMode: null, equipier: 'Moi', photoColis: false,
@@ -280,14 +283,38 @@ function cAccueil() {
     <div class="carte"><div class="livreur" style="border:0;padding:0;cursor:default"><span class="avatar">${fav.init}</span><span><span class="nom">${fav.nom} <span class="badge fav">★ Favori</span></span><span class="sous">${fav.note} · ${fav.courses} courses${fav.equipe ? ` · équipe de ${fav.equipe.length}` : ''}</span></span>${S.dispo && !S.indispo.includes(fav.id) ? '<span class="badge ok">Disponible</span>' : '<span class="badge ko">Occupé</span>'}</div></div>
   </div>`;
 }
+function cCommercant() {
+  const m = S.mission;
+  return `${entete('Grâce Couture')}
+  <div class="corps">
+    ${m ? `<button class="tuile" data-act="c" data-v="suivi"><span class="ico">📦</span><span><b>Mission ${m.statut === 'livree' ? 'terminée' : 'en cours'}</b><span class="sous">${m.colisType} · ${m.colis} · ${statutTexte(m)}</span></span></button>` : ''}
+    <p class="titre-section">Confier une livraison</p>
+    <button class="tuile" data-act="merchant-new"><span class="ico">📦</span><span><b>Créer une mission</b><span class="sous">Décrire le colis, choisir un prestataire</span></span></button>
+    <p class="titre-section">Mes prestataires favoris</p>
+    <div class="carte"><div class="livreur" style="border:0;padding:0;cursor:default"><span class="avatar">G</span><span><span class="nom">Grâce EXPRESS <span class="badge fav">★ Favori</span></span><span class="sous">3 livreurs · Cotonou · repas, gâteaux, colis</span></span><span class="badge ok">Disponible</span></div></div>
+    <div class="carte"><div class="livreur" style="border:0;padding:0;cursor:default"><span class="avatar">A</span><span><span class="nom">Afi <span class="badge neutre">Indépendante</span></span><span class="sous">4.9 · 128 courses · Cotonou</span></span><span class="badge ok">Disponible</span></div></div>
+  </div>`;
+}
+function cAgence() {
+  const m = S.mission;
+  const l = m ? L(m.livreur) : L('kossi');
+  return `${entete('Grâce EXPRESS')}
+  <div class="corps">
+    <div class="carte"><h3>Grâce EXPRESS</h3><p class="sous" style="margin:0">Agence · 3 livreurs · Cotonou</p><span class="badge ok" style="margin-top:8px">Profil vérifié</span></div>
+    ${m ? `<p class="titre-section">Mission reçue</p><div class="carte"><h3>${m.colisType} · ${esc(m.colis)}</h3><div class="ligne"><span>Départ</span><span>${esc(m.depart.quartier)}</span></div><div class="ligne"><span>Arrivée</span><span>${esc(m.arrivee.quartier)}</span></div><div class="ligne"><span>Prix</span><span class="num">${fmt(m.prix)}</span></div>${m.statut === 'envoyee' ? `<p class="sous" style="margin:8px 0">Choisissez le livreur qui connaît le mieux cette zone.</p><button class="btn prim grand" data-act="agency-assign">Affecter Kossi</button>` : `<div class="contact" style="margin-top:8px"><span class="avatar">${l.init}</span><span><b>${m.qui}</b><br><span class="sous">${l.agence || 'Indépendant'}</span></span><span class="badge ok">Affecté</span></div>`}</div>` : `<div class="vide"><span class="ico">📋</span>Aucune mission reçue.<br><span class="sous">Les commerçants vous trouveront ici.</span></div>`}
+    <p class="titre-section">Mon équipe</p>
+    <div class="carte"><div class="ligne"><span>Kossi</span><span class="badge ok">Disponible</span></div><div class="ligne"><span>Sèna</span><span class="badge ok">Disponible</span></div><div class="ligne"><span>Rachidi</span><span class="badge att">En livraison</span></div></div>
+  </div>`;
+}
 function cLieux() {
   const rec = S.type === 'recuperer';
-  const ok = lieuOk(S.depart) && lieuOk(S.arrivee) && S.colis.trim() && (!S.cod || Number(S.codMontant) > 0);
+  const ok = lieuOk(S.depart) && lieuOk(S.arrivee) && S.colisType && S.colis.trim() && (!S.cod || Number(S.codMontant) > 0);
   return `${entete(rec ? 'Récupérer un colis' : 'Envoyer un colis', 'accueil', '1 / 3')}
   <div class="corps">
     ${blocLieu('depart', rec ? 'Où récupérer le colis' : 'Chez moi (départ)', 'Ex. : marché Dantokpa, allée des tissus, boutique de Maman Rosine')}
     ${blocLieu('arrivee', rec ? 'Chez moi (arrivée)' : 'Où livrer', 'Ex. : Fidjrossè, après la station, la maison au portail vert')}
-    <label class="champ">Le colis <input type="text" data-bind="colis" value="${esc(S.colis)}" placeholder="Ex. : 2 pagnes dans un sachet noir"></label>
+    <label class="champ">Nature du colis <select data-bind="colisType"><option value="">Choisir…</option>${PARCEL_TYPES.map(t => `<option ${S.colisType === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+    <label class="champ">Description du colis <input type="text" data-bind="colis" value="${esc(S.colis)}" placeholder="Ex. : gâteau à la crème, boîte rectangulaire"></label>
     <button class="btn ${S.photoColis ? 'fait' : ''}" data-act="photo" style="${S.photoColis ? 'background:var(--succes-fond);color:var(--succes);border-color:var(--succes)' : ''}">📷 ${S.photoColis ? 'Photo ajoutée' : 'Photo du colis (facultatif)'}</button>
     <div class="champ" style="font-weight:600;font-size:.875rem">Le livreur doit-il encaisser l’argent du colis ?</div>
     <div class="choix"><button data-act="cod" data-v="0" aria-pressed="${!S.cod}">Non</button><button data-act="cod" data-v="1" aria-pressed="${S.cod}">Oui</button></div>
@@ -302,7 +329,7 @@ function cLivreurs() {
     const ko = S.indispo.includes(l.id);
     return `<button class="livreur" data-act="choisir" data-v="${l.id}" aria-pressed="${S.livreurId === l.id}" ${ko ? 'disabled' : ''}>
       <span class="avatar">${l.init}</span>
-      <span><span class="nom">${l.nom} ${l.id === S.favori ? '<span class="badge fav">★ Favori</span>' : ''} ${ko ? '<span class="badge ko">Indisponible</span>' : ''}</span>
+      <span><span class="nom">${l.nom} ${l.agence ? `<span class="badge info">${l.agence}</span>` : '<span class="badge neutre">Indépendant</span>'} ${l.id === S.favori ? '<span class="badge fav">★ Favori</span>' : ''} ${ko ? '<span class="badge ko">Indisponible</span>' : ''}</span>
       <span class="sous">★ ${l.note} · ${l.courses} courses · à ${String(l.km).replace('.', ',')} km${l.equipe ? ` · équipe de ${l.equipe.length}` : ''}</span></span>
       <span class="prix">${fmt(prixGrille(l))}<small>${l.negocie ? 'à discuter' : 'prix fixe'}</small></span></button>`;
   };
@@ -325,7 +352,7 @@ function cRecap() {
       <div class="ligne"><span>Mission</span><span>${typeLabel()}</span></div>
       <div class="ligne"><span>Départ</span><span>${esc(S.depart.quartier)}</span></div>
       <div class="ligne"><span>Arrivée</span><span>${esc(S.arrivee.quartier)}</span></div>
-      <div class="ligne"><span>Colis</span><span>${esc(S.colis)}</span></div>
+      <div class="ligne"><span>Colis</span><span>${esc(S.colisType)} · ${esc(S.colis)}</span></div>
       ${S.cod ? `<div class="ligne"><span>À encaisser</span><span class="num">${fmt(S.codMontant)}</span></div>` : ''}
       <div class="ligne"><span>Livreur</span><span>${l.nom}</span></div>
       <div class="ligne"><span>Prix de la course</span><span class="num">${fmt(p)}</span></div>
@@ -435,7 +462,7 @@ function lDemandes() {
         <h3>${typeLabel()}</h3>
         <div class="ligne"><span>Départ</span><span>${esc(S.depart.quartier)}</span></div>
         <div class="ligne"><span>Arrivée</span><span>${esc(S.arrivee.quartier)}</span></div>
-        <div class="ligne"><span>Colis</span><span>${esc(S.colis)}</span></div>
+        <div class="ligne"><span>Colis</span><span>${esc(S.colisType)} · ${esc(S.colis)}</span></div>
         ${S.cod ? `<div class="ligne"><span>À encaisser</span><span class="num">${fmt(S.codMontant)}</span></div>` : ''}
         <div class="ligne"><span>Course payée en</span><span>${S.paiement === 'momo' ? 'Mobile Money' : 'Espèces'}</span></div>
         <div class="ligne"><span>Votre prix</span><span class="num">${fmt(grille)}</span></div>
@@ -526,19 +553,21 @@ function lEquipe() {
 
 /* ---------- Rendu et actions ---------- */
 function render() {
-  const cv = { accueil: cAccueil, lieux: cLieux, livreurs: cLivreurs, recap: cRecap, suivi: cSuivi, fin: cFin };
+  const cv = { accueil: cAccueil, commercant: cCommercant, agence: cAgence, lieux: cLieux, livreurs: cLivreurs, recap: cRecap, suivi: cSuivi, fin: cFin };
   const lv = { demandes: lDemandes, journee: lJournee, grille: lGrille, equipe: lEquipe };
-  document.getElementById('client').innerHTML = cv[S.c]();
+  const ecranClient = S.vue === 'commercant' && S.c === 'accueil' ? cCommercant : S.vue === 'agence' && S.c === 'accueil' ? cAgence : cv[S.c];
+  document.getElementById('client').innerHTML = ecranClient();
   document.getElementById('livreur').innerHTML = lv[S.l]();
   const lnom = L(S.mission?.livreur || 'kossi').nom;
   document.getElementById('etiq-livreur').textContent = `Livreur · ${lnom}${L(S.mission?.livreur || 'kossi').equipe ? ' et son équipe' : ''}`;
+  document.getElementById('etiq-client').textContent = S.vue === 'commercant' ? 'Commerçant · Grâce Couture' : S.vue === 'agence' ? 'Agence · Grâce EXPRESS' : 'Client · Awa';
   document.querySelectorAll('.onglets button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.vue));
-  document.getElementById('col-client').toggleAttribute('hidden-mobile', S.vue !== 'client');
+  document.getElementById('col-client').toggleAttribute('hidden-mobile', S.vue === 'livreur');
   document.getElementById('col-livreur').toggleAttribute('hidden-mobile', S.vue !== 'livreur');
   document.getElementById('pastille-l').hidden = !(S.mission?.statut === 'envoyee' && S.vue === 'client');
 }
 function set(chemin, val) { const k = chemin.split('.'); if (k.length === 2) S[k[0]][k[1]] = val; else S[k[0]] = val; }
-const champsLiveRender = new Set(['colis', 'codMontant', 'depart.quartier', 'arrivee.quartier', 'depart.repere', 'arrivee.repere', 'depart.tel', 'arrivee.tel', 'contreSaisie', 'codeSaisi', 'equipier', 'propose', 'refSms']);
+  const champsLiveRender = new Set(['colis', 'colisType', 'codMontant', 'depart.quartier', 'arrivee.quartier', 'depart.repere', 'arrivee.repere', 'depart.tel', 'arrivee.tel', 'contreSaisie', 'codeSaisi', 'equipier', 'propose', 'refSms']);
 
 document.addEventListener('input', e => {
   const t = e.target;
@@ -561,11 +590,13 @@ document.addEventListener('click', e => {
   const v = b.dataset.v, m = S.mission;
   switch (b.dataset.act) {
     case 'reset': reset(); return;
-    case 'vue': S.vue = v; break;
+    case 'vue': S.vue = v; if (v === 'commercant' || v === 'agence') S.c = 'accueil'; break;
+    case 'merchant-new': S.vue = 'commercant'; S.type = 'envoyer'; S.depart = { ...MAISON }; S.arrivee = vierge(); S.colisType = ''; S.colis = ''; S.livreurId = null; S.propose = ''; S.c = 'lieux'; break;
+    case 'agency-assign': m.qui = 'Kossi'; m.statut = 'acceptee'; S.l = 'demandes'; break;
     case 'c': S.c = v; break;
     case 'l': S.l = v; break;
     case 'type':
-      S.type = v; S.depart = vierge(); S.arrivee = vierge(); S.livreurId = null; S.propose = '';
+      S.type = v; S.depart = vierge(); S.arrivee = vierge(); S.colisType = ''; S.colis = ''; S.livreurId = null; S.propose = '';
       if (v === 'recuperer') S.arrivee = { ...MAISON }; else S.depart = { ...MAISON };
       S.c = 'lieux'; break;
     case 'pin': S[v].pin = !S[v].pin; break;
@@ -577,7 +608,7 @@ document.addEventListener('click', e => {
     case 'paiement': S.paiement = v; break;
     case 'envoyer': {
       const l = L(S.livreurId), p = prixGrille(l), prop = Number(S.propose);
-      S.mission = { livreur: l.id, statut: 'envoyee', prix: p, propose: l.negocie && prop > 0 && prop !== p ? prop : null, contre: null, qui: null, code: code4(), encaisse: null };
+      S.mission = { livreur: l.id, agence: l.agence, depart: { ...S.depart }, arrivee: { ...S.arrivee }, colisType: S.colisType, colis: S.colis, statut: 'envoyee', prix: p, propose: l.negocie && prop > 0 && prop !== p ? prop : null, contre: null, qui: null, code: code4(), encaisse: null };
       S.equipier = 'Moi'; S.contreSaisie = ''; S.codeSaisi = ''; S.encaisseMode = null; S.lPaie = null; S.cPaie = null; S.refSms = ''; S.note = 0;
       S.c = 'suivi'; S.l = 'demandes'; break;
     }
