@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root {
+  color-scheme: light;
   --encre: #14181B; --papier: #FBFAF7; --carte: #FFFFFF;
   --ocre: #8F6212; --ocre-profond: #6E4B0D; --ocre-fond: #F6EBD6;
   --n-50: #F5F3EF; --n-100: #EAE7E1; --n-200: #D9D5CD; --n-400: #9C968B; --n-600: #625D54; --n-700: #4A463F;
@@ -21,6 +22,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --encre: #F3F1EC; --papier: #0E1216; --carte: #161B20; --ocre: #E0AC5A; --ocre-profond: #F0C285; --ocre-fond: #2A2214;
     --n-50: #1B2026; --n-100: #232930; --n-200: #333A42; --n-400: #7C766B; --n-600: #B5AFA4; --n-700: #D2CCC1;
     --succes: #7CC4A0; --succes-fond: #15291F; --attente: #E0AC5A; --attente-fond: #2A2214;
@@ -28,6 +30,7 @@
   }
 }
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --encre: #F3F1EC; --papier: #0E1216; --carte: #161B20; --ocre: #E0AC5A; --ocre-profond: #F0C285; --ocre-fond: #2A2214;
   --n-50: #1B2026; --n-100: #232930; --n-200: #333A42; --n-400: #7C766B; --n-600: #B5AFA4; --n-700: #D2CCC1;
   --succes: #7CC4A0; --succes-fond: #15291F; --attente: #E0AC5A; --attente-fond: #2A2214;
